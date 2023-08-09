@@ -1,9 +1,11 @@
 package com.petarj123.mediaserver.uploader.interfaces;
 
+import com.petarj123.mediaserver.uploader.folder.model.Folder;
+
 import java.util.List;
 
 public interface FolderServiceImpl {
-    com.petarj123.mediaserver.folder.model.Folder createFolder(String name);
-    List<com.petarj123.mediaserver.folder.model.Folder> getAllFolders();
+    Folder createFolder(String name);
+    List<Folder> getAllFolders();
     boolean deleteFolder(String folderName);
 }
