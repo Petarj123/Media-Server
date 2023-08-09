@@ -1,6 +1,6 @@
-package com.petarj123.mediaserver.folder.service;
+package com.petarj123.mediaserver.uploader.folder.service;
 
-import com.petarj123.mediaserver.folder.model.Folder;
+import com.petarj123.mediaserver.uploader.folder.model.Folder;
 import com.petarj123.mediaserver.uploader.interfaces.FolderServiceImpl;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.stereotype.Service;

@@ -1,8 +1,8 @@
-package com.petarj123.mediaserver.folder.controller;
+package com.petarj123.mediaserver.uploader.folder.controller;
 
-import com.petarj123.mediaserver.folder.dto.FolderDTO;
-import com.petarj123.mediaserver.folder.model.Folder;
-import com.petarj123.mediaserver.folder.service.FolderService;
+import com.petarj123.mediaserver.uploader.folder.dto.FolderDTO;
+import com.petarj123.mediaserver.uploader.folder.model.Folder;
+import com.petarj123.mediaserver.uploader.folder.service.FolderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +27,7 @@ public class FolderController {
         return folderService.getAllFolders();
     }
     @DeleteMapping("/delete")
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public boolean deleteFolder(@RequestBody FolderDTO request){
         return folderService.deleteFolder(request.name());
     }

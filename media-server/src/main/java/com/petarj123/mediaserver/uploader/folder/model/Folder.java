@@ -1,4 +1,4 @@
-package com.petarj123.mediaserver.folder.model;
+package com.petarj123.mediaserver.uploader.folder.model;
 
 import lombok.*;
 
