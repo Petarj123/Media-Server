@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ControllerAdvice
 public class UploaderExceptionHandler {
-    // TODO Make DTOs for exceptions
+    // TODO Make DTOs for exceptions, then fix frontend
     @ExceptionHandler(FileException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
