@@ -4,7 +4,6 @@
     <title>File Upload and Folder Management</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}" />
     <script th:src="@{/js/folderManager.js}" defer></script>
-
 </head>
 <body>
 <div class="container">
@@ -27,7 +26,8 @@
 
     <h3>Upload Images</h3>
     <form id="uploadImageForm" enctype="multipart/form-data">
-        <input type="file" name="files" accept="image/*" multiple required />
+        <input type="text" name="folderName" placeholder="Enter folder name" required />
+        <input type="file" name="file" accept="image/*" multiple required />
         <button type="button" id="uploadImageButton">Upload</button>
     </form>
 </div>
