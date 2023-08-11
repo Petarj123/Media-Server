@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests((authorize) -> {
                     authorize.requestMatchers("/api/auth/**").permitAll();
                     authorize.requestMatchers("/admin/**").hasRole("ADMIN");
+                    authorize.requestMatchers("/folder/**", "/file/**").hasAnyRole("ADMIN", "USER");
                     authorize.anyRequest().authenticated();
                 })
                 .sessionManagement()
