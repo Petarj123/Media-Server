@@ -1,6 +1,7 @@
 package com.petarj123.mediaserver.auth.jwt.service;
 
 import com.petarj123.mediaserver.auth.interfaces.JwtImpl;
+import com.petarj123.mediaserver.auth.user.model.SecureUser;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -8,10 +9,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class JwtService implements JwtImpl {
@@ -31,10 +35,18 @@ public class JwtService implements JwtImpl {
     @Override
     public String generateToken(Authentication authentication) {
         String username = authentication.getName();
+        List<String> roles = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+        SecureUser secureUser = (SecureUser) authentication.getPrincipal();
+        String email = secureUser.getEmail();
+
         Date currentDate = new Date();
         Date expirationDate = new Date(currentDate.getTime() + expiration);
         return Jwts.builder()
                 .setSubject(username)
+                .claim("roles", roles)
+                .claim("email", email)
                 .setIssuedAt(currentDate)
                 .setExpiration(expirationDate)
                 .signWith(key)
