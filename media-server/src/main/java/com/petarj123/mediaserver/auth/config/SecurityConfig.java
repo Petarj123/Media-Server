@@ -33,6 +33,7 @@ public class SecurityConfig {
                 .and()
                 .authorizeHttpRequests((authorize) -> {
                     authorize.requestMatchers("/api/auth/**").permitAll();
+                    authorize.requestMatchers("/admin/**").hasRole("ADMIN");
                     authorize.anyRequest().authenticated();
                 })
                 .sessionManagement()
