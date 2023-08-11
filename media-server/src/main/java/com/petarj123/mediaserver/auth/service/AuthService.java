@@ -15,9 +15,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Service
@@ -40,7 +38,6 @@ public class AuthService {
         return jwtService.generateToken(authentication);
     }
     public void register(String username, String email, String password, String confirmPassword) throws PasswordMismatchException, InvalidPasswordException, InvalidEmailException, UsernameExistsException, EmailExistsException {
-
 
         if (userRepository.existsByUsername(username)) {
             throw new UsernameExistsException("Username already exists");
@@ -67,8 +64,7 @@ public class AuthService {
                 .roles(new HashSet<>())
                 .createdAt(new Date())
                 .build();
-
-        user.setRoles(Collections.singleton(Role.USER));
+        user.setRoles(new HashSet<>(List.of(Role.USER)));
         userRepository.save(user);
     }
 }
