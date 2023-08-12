@@ -24,4 +24,5 @@ public class User {
     private String password;
     private Set<Role> roles;
     private Date createdAt;
+    private boolean isLocked;
 }
