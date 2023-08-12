@@ -1,7 +1,11 @@
 package com.petarj123.mediaserver.uploader.file.service;
 
+import com.petarj123.mediaserver.uploader.DTO.ScanResult;
 import com.petarj123.mediaserver.uploader.exceptions.FileException;
+import com.petarj123.mediaserver.uploader.exceptions.InfectedFileException;
 import com.petarj123.mediaserver.uploader.interfaces.FileServiceImpl;
+import com.petarj123.mediaserver.uploader.service.ClamAVService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,32 +16,49 @@ import java.nio.file.Paths;
 import java.util.Objects;
 
 @Service
+@RequiredArgsConstructor
 public class FileService implements FileServiceImpl {
     private static final String serverFolderPath = "/home/petarjankovic/Documents/Server/";
+    private final ClamAVService clamAVService;
 
     @Override
-    public String saveFile(MultipartFile file, String folderName) throws FileException {
+    public ScanResult saveFile(MultipartFile file, String folderName) throws FileException {
         if (file.isEmpty()) {
             throw new FileException("File is empty");
         }
 
         try {
-            Path folderPath = Paths.get(serverFolderPath, folderName);
-            if (!Files.exists(folderPath)) {
-                Files.createDirectories(folderPath);
+            Path tempFolderPath = Paths.get(serverFolderPath, "temp");
+            if (!Files.exists(tempFolderPath)) {
+                Files.createDirectories(tempFolderPath);
             }
 
-            // Resolve ensures the path is combined correctly
-            Path targetPath = folderPath.resolve(Objects.requireNonNull(file.getOriginalFilename()));
+            Path tempTargetPath = tempFolderPath.resolve(Objects.requireNonNull(file.getOriginalFilename()));
 
-            if (Files.exists(targetPath)) {
+            // Save the file to the temp directory first
+            Files.copy(file.getInputStream(), tempTargetPath);
+
+            // Scan the file with ClamAV
+            ScanResult scanResult = clamAVService.scanFile(tempTargetPath);
+            if (!scanResult.isClean()) {
+                Files.delete(tempTargetPath);
+                throw new InfectedFileException("File " + file.getOriginalFilename() + " is infected and has been deleted.");
+            }
+
+            Path finalFolderPath = Paths.get(serverFolderPath, folderName);
+            if (!Files.exists(finalFolderPath)) {
+                Files.createDirectories(finalFolderPath);
+            }
+
+            Path finalTargetPath = finalFolderPath.resolve(Objects.requireNonNull(file.getOriginalFilename()));
+            if (Files.exists(finalTargetPath)) {
                 throw new FileException("File " + file.getOriginalFilename() + " already exists.");
             }
 
-            // Save the file
-            Files.copy(file.getInputStream(), targetPath);
+            // Move the scanned and safe file to the final directory
+            Files.move(tempTargetPath, finalTargetPath);
 
-            return targetPath.toString();
+            return new ScanResult(finalTargetPath.toString(), true);
 
         } catch (IOException e) {
             throw new FileException("Failed to store file " + file.getOriginalFilename() + ". Error: " + e.getMessage());
@@ -60,5 +81,7 @@ public class FileService implements FileServiceImpl {
             throw new FileException("Failed to delete file " + filename + ". Error: " + e.getMessage());
         }
     }
+
+
 
 }
