@@ -29,4 +29,14 @@ public class AdminController {
     public void demoteToUserFromAdmin(@RequestParam String usernameOrEmail){
         adminService.demoteUserFromAdmin(usernameOrEmail);
     }
+    @PutMapping("/ban")
+    @ResponseStatus(HttpStatus.OK)
+    public void banUser(@RequestParam String usernameOrEmail){
+        adminService.banUser(usernameOrEmail);
+    }
+    @PutMapping("/unban")
+    @ResponseStatus(HttpStatus.OK)
+    public void unbanUser(@RequestParam String usernameOrEmail){
+        adminService.unbanUser(usernameOrEmail);
+    }
 }
