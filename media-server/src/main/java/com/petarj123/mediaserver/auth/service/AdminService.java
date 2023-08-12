@@ -2,6 +2,7 @@ package com.petarj123.mediaserver.auth.service;
 
 import com.petarj123.mediaserver.auth.exceptions.*;
 import com.petarj123.mediaserver.auth.user.model.Role;
+import com.petarj123.mediaserver.auth.user.model.SecureUser;
 import com.petarj123.mediaserver.auth.user.model.User;
 import com.petarj123.mediaserver.auth.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -81,5 +82,16 @@ public class AdminService {
 
         userRepository.save(user);
     }
-
+    public void banUser(String usernameOrEmail) {
+        User user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setLocked(true);
+        userRepository.save(user);
+    }
+    public void unbanUser(String usernameOrEmail) {
+        User user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setLocked(false);
+        userRepository.save(user);
+    }
 }
