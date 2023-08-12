@@ -63,6 +63,7 @@ public class AuthService {
                 .password(passwordEncoder.encode(password))
                 .roles(new HashSet<>())
                 .createdAt(new Date())
+                .isLocked(false)
                 .build();
         user.setRoles(new HashSet<>(List.of(Role.USER)));
         userRepository.save(user);
