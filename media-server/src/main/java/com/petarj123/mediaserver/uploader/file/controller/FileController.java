@@ -2,6 +2,7 @@ package com.petarj123.mediaserver.uploader.file.controller;
 
 import com.petarj123.mediaserver.uploader.DTO.ScanResult;
 import com.petarj123.mediaserver.uploader.exceptions.FileException;
+import com.petarj123.mediaserver.uploader.exceptions.InvalidFileExtensionException;
 import com.petarj123.mediaserver.uploader.file.service.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,7 @@ public class FileController {
 
     @PostMapping("/upload")
     @ResponseStatus(HttpStatus.CREATED)
-    public List<ScanResult> upload(@RequestParam("files") MultipartFile[] files, @RequestParam("folderName") String folderName) throws FileException {
+    public List<ScanResult> upload(@RequestParam("files") MultipartFile[] files, @RequestParam("folderName") String folderName) throws FileException, InvalidFileExtensionException {
         List<ScanResult> scanResults = new ArrayList<>();
         for (MultipartFile file : files) {
             scanResults.add(fileService.saveFile(file, folderName));
