@@ -2,122 +2,94 @@ package com.petarj123.mediaserver.uploader.file.service;
 
 import com.petarj123.mediaserver.uploader.DTO.ScanResult;
 import com.petarj123.mediaserver.uploader.exceptions.FileException;
-import com.petarj123.mediaserver.uploader.exceptions.InfectedFileException;
 import com.petarj123.mediaserver.uploader.exceptions.InvalidFileExtensionException;
+import com.petarj123.mediaserver.uploader.file.model.File;
+import com.petarj123.mediaserver.uploader.file.model.SanitizedFile;
+import com.petarj123.mediaserver.uploader.file.repository.FileRepository;
 import com.petarj123.mediaserver.uploader.interfaces.FileServiceImpl;
 import com.petarj123.mediaserver.uploader.service.ClamAVService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import ws.schild.jave.EncoderException;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class FileService implements FileServiceImpl {
-    private static final String serverFolderPath = "/home/petarjankovic/Documents/Server/";
-    private final ClamAVService clamAVService;
+    @Value("${fileStorage.path}")
+    private String serverFolderPath;
 
+    private static final Logger logger = LoggerFactory.getLogger(FileService.class);
+    private final FileRepository fileRepository;
+    private final FileSanitizer fileSanitizer;
+    private final FileSystemService fileSystemService;
     @Override
-    public ScanResult saveFile(MultipartFile file, String folderName) throws FileException, InvalidFileExtensionException {
-        if (file.isEmpty()) {
-            throw new FileException("File is empty");
-        }
+    public ScanResult saveFile(MultipartFile multipartFile, String folderName) throws FileException, InvalidFileExtensionException, EncoderException, IOException {
+        // 1. Ensure that the provided file isn't empty
+        fileSystemService.checkFileIsEmpty(multipartFile);
 
-        // Sanitize the filename before any file operations
-        String sanitizedFileName = sanitizeFileName(Objects.requireNonNull(file.getOriginalFilename()));
+        // 2. Sanitize the file's name to prevent possible security risks
+        SanitizedFile sanitizedFileName = fileSanitizer.sanitizeFileName(Objects.requireNonNull(multipartFile.getOriginalFilename()));
+
+        // 3. Prepare the path in the temporary directory where the file will be initially stored
+        Path tempTargetPath = fileSystemService.prepareTemporaryPath(sanitizedFileName);
 
         try {
-            Path tempFolderPath = Paths.get(serverFolderPath, "temp");
-            if (!Files.exists(tempFolderPath)) {
-                Files.createDirectories(tempFolderPath);
-            }
+            // 4. Copy the file from the client's request to the temporary location on the server
+            Files.copy(multipartFile.getInputStream(), tempTargetPath);
 
-            Path tempTargetPath = tempFolderPath.resolve(Objects.requireNonNull(sanitizedFileName));
+            // 5. Scan the temporarily stored file for viruses using ClamAV
+            fileSystemService.scanWithClamAV(tempTargetPath, multipartFile);
 
-            // Save the file to the temp directory
-            Files.copy(file.getInputStream(), tempTargetPath);
+            // 6. Prepare the final storage path for the file after validation
+            Path finalTargetPath = fileSystemService.prepareFinalPath(sanitizedFileName, folderName);
 
-            // Scan the file with ClamAV
-            ScanResult scanResult = clamAVService.scanFile(tempTargetPath);
-            if (!scanResult.isClean()) {
-                Files.delete(tempTargetPath);
-                throw new InfectedFileException("File " + file.getOriginalFilename() + " is infected and has been deleted.");
-            }
+            // 7. If the file is a video or photo, extract its metadata from the temporary location
+            Map<String, Object> metadata = fileSystemService.extractFileMetadata(tempTargetPath, sanitizedFileName.fileType);
 
-            Path finalFolderPath = Paths.get(serverFolderPath, folderName);
-            if (!Files.exists(finalFolderPath)) {
-                Files.createDirectories(finalFolderPath);
-            }
+            // 8. Build the file's metadata and save it to the database
+            fileSystemService.buildAndSaveFile(sanitizedFileName, finalTargetPath, sanitizedFileName.fileType, metadata);
 
-            Path finalTargetPath = finalFolderPath.resolve(Objects.requireNonNull(sanitizedFileName));
-            if (Files.exists(finalTargetPath)) {
-                throw new FileException("File " + file.getOriginalFilename() + " already exists.");
-            }
-
-            // Move the scanned and safe file to the final directory
+            // 9. Move the validated file from the temporary directory to its final location
             Files.move(tempTargetPath, finalTargetPath);
 
+            // 10. Return the result of the operation, indicating the file's final path and confirming its safety
             return new ScanResult(finalTargetPath.toString(), true);
-
-        } catch (IOException e) {
-            throw new FileException("Failed to store file " + file.getOriginalFilename() + ". Error: " + e.getMessage());
+        } finally {
+            // Delete the file from the temporary directory, regardless of whether an exception was thrown or not
+            Files.deleteIfExists(tempTargetPath);
         }
     }
+
 
 
 
     @Override
     public boolean deleteFile(String filename, String folderName) throws FileException {
-        Path fileToDelete = Paths.get(serverFolderPath, folderName, filename);
+        File file = fileRepository.findByFileName(filename)
+                .orElseThrow(() -> new FileException("File " + filename + " not found in the database."));
 
+        Path fileToDelete = Paths.get(serverFolderPath, folderName, filename);
         if (!Files.exists(fileToDelete)) {
-            throw new FileException("File " + filename + " does not exist.");
+            throw new FileException("File " + filename + " does not exist on the file system.");
         }
 
         try {
             Files.delete(fileToDelete);
+            fileRepository.delete(file);
             return true;
         } catch (IOException e) {
             throw new FileException("Failed to delete file " + filename + ". Error: " + e.getMessage());
         }
     }
-    // TODO Vidi sta treba da se desi ako fajlovi imaju isto ime, ali drugaciji sadrzaj.
-    private String sanitizeFileName(String originalFilename) throws InvalidFileExtensionException {
-        String sanitized = originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_");
-
-        // Collapse multiple underscores into one
-        sanitized = sanitized.replaceAll("_{2,}", "_");
-
-        // Ensure file names don't start or end with a dot or underscore
-        sanitized = sanitized.replaceAll("^[._]", "");
-        sanitized = sanitized.replaceAll("[._]$", "");
-
-        // Ensure file names don't contain sequences like ".."
-        sanitized = sanitized.replace("..", ".");
-
-        // Check extensions
-        String[] allowedExtensions = {".txt", ".png", ".jpg", ".pdf"};
-        String finalSanitized = sanitized;
-        boolean isValidExtension = Arrays.stream(allowedExtensions)
-                .anyMatch(finalSanitized::endsWith);
-        if (!isValidExtension) {
-            throw new InvalidFileExtensionException("Unsupported file extension");
-        }
-
-        // Length limitation
-        int MAX_FILENAME_LENGTH = 255;
-        if (sanitized.length() > MAX_FILENAME_LENGTH) {
-            throw new IllegalArgumentException("File name is too long");
-        }
-
-        return sanitized;
-    }
-
-
 }

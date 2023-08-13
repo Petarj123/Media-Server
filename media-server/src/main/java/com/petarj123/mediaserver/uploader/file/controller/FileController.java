@@ -8,7 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import ws.schild.jave.EncoderException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +23,7 @@ public class FileController {
 
     @PostMapping("/upload")
     @ResponseStatus(HttpStatus.CREATED)
-    public List<ScanResult> upload(@RequestParam("files") MultipartFile[] files, @RequestParam("folderName") String folderName) throws FileException, InvalidFileExtensionException {
+    public List<ScanResult> upload(@RequestParam("files") MultipartFile[] files, @RequestParam("folderName") String folderName) throws FileException, InvalidFileExtensionException, EncoderException, IOException {
         List<ScanResult> scanResults = new ArrayList<>();
         for (MultipartFile file : files) {
             scanResults.add(fileService.saveFile(file, folderName));

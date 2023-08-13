@@ -4,9 +4,12 @@ import com.petarj123.mediaserver.uploader.DTO.ScanResult;
 import com.petarj123.mediaserver.uploader.exceptions.FileException;
 import com.petarj123.mediaserver.uploader.exceptions.InvalidFileExtensionException;
 import org.springframework.web.multipart.MultipartFile;
+import ws.schild.jave.EncoderException;
+
+import java.io.IOException;
 
 public interface FileServiceImpl {
-    ScanResult saveFile(MultipartFile file, String folderName) throws FileException, InvalidFileExtensionException;
+    ScanResult saveFile(MultipartFile file, String folderName) throws FileException, InvalidFileExtensionException, EncoderException, IOException;
     boolean deleteFile(String filename, String folderName) throws FileException;
 
 }
