@@ -72,9 +72,6 @@ public class FileService implements FileServiceImpl {
         }
     }
 
-
-
-
     @Override
     public boolean deleteFile(String filename, String folderName) throws FileException {
         File file = fileRepository.findByFileName(filename)
@@ -126,6 +123,4 @@ public class FileService implements FileServiceImpl {
             }
         }
     }
-
-
 }
