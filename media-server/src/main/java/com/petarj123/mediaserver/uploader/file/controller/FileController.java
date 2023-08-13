@@ -36,4 +36,9 @@ public class FileController {
     public boolean delete(@RequestParam("fileName") String fileName, @RequestParam("folderName") String folderName) throws FileException {
         return fileService.deleteFile(fileName, folderName);
     }
+    @PutMapping("/move")
+    @ResponseStatus(HttpStatus.OK)
+    public void move(@RequestParam("files") List<String> files, @RequestParam("currentFolder") String currentFolder, @RequestParam("newFolder") String newFolder) throws FileException {
+        fileService.moveFiles(files, currentFolder, newFolder);
+    }
 }

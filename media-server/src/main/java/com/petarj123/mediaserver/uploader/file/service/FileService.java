@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -92,4 +93,39 @@ public class FileService implements FileServiceImpl {
             throw new FileException("Failed to delete file " + filename + ". Error: " + e.getMessage());
         }
     }
+
+    @Override
+    public void moveFiles(List<String> files, String currentFolder, String newFolder) throws FileException {
+        Path currentFolderPath = Paths.get(serverFolderPath, currentFolder);
+        if (!Files.exists(currentFolderPath) || !Files.isDirectory(currentFolderPath)) {
+            throw new FileException("Source folder " + currentFolder + " does not exist or is not a directory.");
+        }
+
+        Path newFolderPath = Paths.get(serverFolderPath, newFolder);
+        if (!Files.exists(newFolderPath) || !Files.isDirectory(newFolderPath)) {
+            throw new FileException("Target folder " + newFolder + " does not exist or is not a directory.");
+        }
+
+        for (String file : files) {
+            File storedFile = fileRepository.findByFileName(file).orElseThrow(() -> new FileException("File " + file + " does not exist on the file system."));
+            Path storedFileLocation = Paths.get(storedFile.getFilePath());
+
+            Path targetPath = newFolderPath.resolve(storedFile.getFileName());
+
+            if (Files.exists(targetPath)) {
+                throw new FileException("File " + file + " already exists in " + newFolder + ".");
+            }
+
+            try {
+                Files.move(storedFileLocation, targetPath);
+                storedFile.setFilePath(targetPath.toString());
+                fileRepository.save(storedFile);
+            } catch (IOException e) {
+                logger.error(String.valueOf(e));
+                throw new FileException("Error moving file " + file + " to " + newFolder);
+            }
+        }
+    }
+
+
 }
