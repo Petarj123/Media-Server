@@ -30,7 +30,6 @@ public class FileController {
         }
         return scanResults;
     }
-
     @DeleteMapping("/delete")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public boolean delete(@RequestParam("fileName") String fileName, @RequestParam("folderName") String folderName) throws FileException {
