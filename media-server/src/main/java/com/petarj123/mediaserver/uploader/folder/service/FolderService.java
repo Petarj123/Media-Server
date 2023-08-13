@@ -26,16 +26,16 @@ public class FolderService implements FolderServiceImpl {
             if (!Files.exists(rootPath)) {
                 Files.createDirectories(rootPath);
             }
-
-            Path folderPath = rootPath.resolve(name);
+            String sanitizedName = sanitizeFolderName(name);
+            Path folderPath = rootPath.resolve(sanitizedName);
             if (!Files.exists(folderPath)) {
                 Files.createDirectory(folderPath);
                 return Folder.builder()
-                        .name(name)
+                        .name(sanitizedName)
                         .createdAt(new Date())
                         .build();
             } else {
-                throw new FolderException("Folder " + name + " already exists.");
+                throw new FolderException("Folder " + sanitizedName + " already exists.");
             }
         } catch (IOException e) {
             throw new FolderException("Failed to create folder. Error: " + e.getMessage());
@@ -92,6 +92,27 @@ public class FolderService implements FolderServiceImpl {
         } else {
             throw new FolderException("Folder does not exist or is not a directory.");
         }
+    }
+
+    private String sanitizeFolderName(String originalName) {
+        // Replace spaces with underscores
+        String sanitized = originalName.replaceAll(" ", "_");
+
+        // Remove non-alphanumeric, non-underscore, and non-hyphen characters
+        sanitized = sanitized.replaceAll("[^a-zA-Z0-9_-]", "");
+
+        // Ensure name doesn't start with a dot
+        if (sanitized.startsWith(".")) {
+            sanitized = sanitized.substring(1);
+        }
+
+        // Limit the length if needed
+        int maxLength = 255; // for example
+        if (sanitized.length() > maxLength) {
+            sanitized = sanitized.substring(0, maxLength);
+        }
+
+        return sanitized;
     }
 
 }
