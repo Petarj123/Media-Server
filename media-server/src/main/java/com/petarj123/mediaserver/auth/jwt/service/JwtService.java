@@ -15,19 +15,16 @@ import org.springframework.stereotype.Service;
 import java.security.Key;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class JwtService implements JwtImpl {
     private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
 
-    private final String secret;
     private final Long expiration;
     private final Key key;
 
     public JwtService(@Value("${jwt.secret}") String secret,
                       @Value("${jwt.expiration}") Long expiration) {
-        this.secret = secret;
         this.expiration = expiration;
         this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
     }
