@@ -12,7 +12,7 @@ public class DatabaseCommands {
 
     @ShellMethod(value = "Connect", key = {"connect"})
     public void createDatabase(String uri, String database) {
-        databaseShellService.connect(uri, database);
+        databaseShellService.setDBConnection(uri, database);
     }
     @ShellMethod(value = "Backup", key = {"backup"})
     public void backupDatabase() {
