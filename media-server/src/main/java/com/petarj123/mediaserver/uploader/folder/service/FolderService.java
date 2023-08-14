@@ -4,6 +4,7 @@ import com.petarj123.mediaserver.uploader.exceptions.FolderException;
 import com.petarj123.mediaserver.uploader.folder.model.Folder;
 import com.petarj123.mediaserver.uploader.interfaces.FolderServiceImpl;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -16,8 +17,8 @@ import java.util.Date;
 import java.util.List;
 @Service
 public class FolderService implements FolderServiceImpl {
-
-    private static final String serverFolderPath = "/home/petarjankovic/Documents/Server/";
+    @Value("${fileStorage.path}")
+    private String serverFolderPath;
 
     @Override
     public Folder createFolder(String name) throws FolderException {
