@@ -15,7 +15,8 @@ import java.util.Properties;
 
 @Service
 public class DatabaseShellService implements DatabaseCommands {
-    private static final String PROP_FILE_PATH = "/home/petarjankovic/Documents/GitHub/Media-Server/media-server/src/main/resources/application.properties";
+    @Value("${properties.path}")
+    private String PROP_FILE_PATH;
     private static final Logger logger = LoggerFactory.getLogger(DatabaseShellService.class);
     @Value("${spring.data.mongodb.uri}")
     private String mongodbUri;
@@ -25,7 +26,7 @@ public class DatabaseShellService implements DatabaseCommands {
     private String backupFolder;
 
     @Override
-    public void connect(String mongodbUri, String database) {
+    public void setDBConnection(String mongodbUri, String database) {
         try {
             Properties properties = new Properties();
             FileInputStream in = new FileInputStream(PROP_FILE_PATH);
