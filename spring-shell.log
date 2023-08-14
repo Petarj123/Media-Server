@@ -1,0 +1,6 @@
+1692029065761:help
+1692029069457:backup
+1692029313162:backuop
+1692029314604:backup
+1692029697551:connect mongodb://localhost:27017/ test
+1692029760540:connect mongodb://localhost:27017/ server
