@@ -32,7 +32,7 @@ public class SecurityConfig {
                 .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .and()
                 .authorizeHttpRequests((authorize) -> {
-                    authorize.requestMatchers("/api/auth/**").permitAll();
+                    authorize.requestMatchers("/api/auth/**", "/login").permitAll();
                     authorize.requestMatchers("/admin/**").hasRole("ADMIN");
                     authorize.requestMatchers("/folder/**", "/file/**").hasAnyRole("ADMIN", "USER");
                     authorize.anyRequest().authenticated();
