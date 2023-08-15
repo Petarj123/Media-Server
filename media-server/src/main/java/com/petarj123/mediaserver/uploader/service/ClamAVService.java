@@ -2,9 +2,12 @@ package com.petarj123.mediaserver.uploader.service;
 
 import com.petarj123.mediaserver.uploader.DTO.ScanResult;
 import com.petarj123.mediaserver.uploader.exceptions.InfectedFileException;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -15,21 +18,39 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Stream;
 
 @Service
+@RequiredArgsConstructor
 public class ClamAVService {
 
     @Value("${clamav.host}")
     private String clamAVHost;
-
     @Value("${clamav.port}")
     private int clamAVPort;
-
+    @Value("${scan.interval}")
+    private long scanInterval;
+    @Value("${clamav.enabled}")
+    private boolean clamAVEnabled;
+    private final TaskScheduler taskScheduler;
+    private ScheduledFuture<?> scheduledTask;
     private static final String serverFolderPath = "/home/petarjankovic/Documents/Server/";
     private static final Logger logger = LoggerFactory.getLogger(ClamAVService.class);
 
+    @PostConstruct
+    public void startScheduledTask() {
+        if (scheduledTask != null) {
+            scheduledTask.cancel(true);
+        }
+        scheduledTask = taskScheduler.scheduleWithFixedDelay(this::scanServer, Duration.ofMillis(scanInterval));
+    }
     public ScanResult scanFile(Path file) throws IOException {
+        if (!clamAVEnabled) {
+            return new ScanResult(file.toString(), true); // Default to clean if ClamAV is disabled
+        }
+
         String responseString;
         try (Socket socket = new Socket(clamAVHost, clamAVPort);
              OutputStream os = socket.getOutputStream();
@@ -51,7 +72,7 @@ public class ClamAVService {
         return new ScanResult(file.toString(), isClean);
     }
 
-    // TODO Sanitize File Names, File Size Limit, Retry Mechanism, Asynchronous Scanning, Batch Scanning
+    // TODO Retry Mechanism, Asynchronous Scanning, Batch Scanning
     @Scheduled(fixedRate = 24 * 60 * 60 * 1000)
     public void scanServer() {
         try (Stream<Path> paths = Files.walk(Paths.get(serverFolderPath))) {
