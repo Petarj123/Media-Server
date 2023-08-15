@@ -29,14 +29,15 @@ public class DatabaseShellService implements DatabaseCommands {
     public void setDBConnection(String mongodbUri, String database) {
         try {
             Properties properties = new Properties();
-            FileInputStream in = new FileInputStream(PROP_FILE_PATH);
+            String path = PROP_FILE_PATH + "/application.properties";
+            FileInputStream in = new FileInputStream(path);
             properties.load(in);
             in.close();
 
             properties.setProperty("spring.data.mongodb.uri", mongodbUri);
             properties.setProperty("spring.data.mongodb.database", database);
 
-            FileOutputStream out = new FileOutputStream(PROP_FILE_PATH);
+            FileOutputStream out = new FileOutputStream(path);
             properties.store(out, null);
             out.close();
         } catch (IOException e) {

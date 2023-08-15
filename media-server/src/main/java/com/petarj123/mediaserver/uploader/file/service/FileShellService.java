@@ -29,14 +29,15 @@ public class FileShellService implements FileShellServiceImpl {
     public void setMaxFileSize(long mb) {
         try {
             Properties properties = new Properties();
-            FileInputStream in = new FileInputStream(PROP_FILE_PATH);
+            String path = PROP_FILE_PATH + "/application.properties";
+            FileInputStream in = new FileInputStream(path);
             properties.load(in);
             in.close();
 
             String size = mb + "MB";
             properties.setProperty("spring.servlet.multipart.max-file-size", size);
 
-            FileOutputStream out = new FileOutputStream(PROP_FILE_PATH);
+            FileOutputStream out = new FileOutputStream(path);
             properties.store(out, null);
             out.close();
         } catch (Exception e) {
@@ -48,14 +49,15 @@ public class FileShellService implements FileShellServiceImpl {
     public void setMaxRequestSize(long mb) {
         try {
             Properties properties = new Properties();
-            FileInputStream in = new FileInputStream(PROP_FILE_PATH);
+            String path = PROP_FILE_PATH + "/application.properties";
+            FileInputStream in = new FileInputStream(path);
             properties.load(in);
             in.close();
 
             String size = mb + "MB";
             properties.setProperty("spring.servlet.multipart.max-request-size", size);
 
-            FileOutputStream out = new FileOutputStream(PROP_FILE_PATH);
+            FileOutputStream out = new FileOutputStream(path);
             properties.store(out, null);
             out.close();
         } catch (Exception e) {

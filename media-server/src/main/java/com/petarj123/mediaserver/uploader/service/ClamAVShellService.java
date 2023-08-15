@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.time.LocalDateTime;
 import java.util.Properties;
 
 @Service
@@ -24,13 +23,14 @@ public class ClamAVShellService implements ClamAVShellServiceImpl {
     public void enableClamAV() {
         try{
             Properties properties = new Properties();
-            FileInputStream in = new FileInputStream(PROP_FILE_PATH);
+            String path = PROP_FILE_PATH + "/application.properties";
+            FileInputStream in = new FileInputStream(path);
             properties.load(in);
             in.close();
 
             properties.setProperty("clamav.enabled", "true");
 
-            FileOutputStream out = new FileOutputStream(PROP_FILE_PATH);
+            FileOutputStream out = new FileOutputStream(path);
             properties.store(out, null);
             out.close();
         } catch (Exception e) {
@@ -42,13 +42,14 @@ public class ClamAVShellService implements ClamAVShellServiceImpl {
     public void disableClamAV() {
         try{
             Properties properties = new Properties();
-            FileInputStream in = new FileInputStream(PROP_FILE_PATH);
+            String path = PROP_FILE_PATH + "/application.properties";
+            FileInputStream in = new FileInputStream(path);
             properties.load(in);
             in.close();
 
             properties.setProperty("clamav.enabled", "false");
 
-            FileOutputStream out = new FileOutputStream(PROP_FILE_PATH);
+            FileOutputStream out = new FileOutputStream(path);
             properties.store(out, null);
             out.close();
         } catch (Exception e) {
@@ -60,13 +61,14 @@ public class ClamAVShellService implements ClamAVShellServiceImpl {
     public void enableScans() {
         try{
             Properties properties = new Properties();
-            FileInputStream in = new FileInputStream(PROP_FILE_PATH);
+            String path = PROP_FILE_PATH + "/application.properties";
+            FileInputStream in = new FileInputStream(path);
             properties.load(in);
             in.close();
 
             properties.setProperty("clamav.scans.enabled", "true");
 
-            FileOutputStream out = new FileOutputStream(PROP_FILE_PATH);
+            FileOutputStream out = new FileOutputStream(path);
             properties.store(out, null);
             out.close();
         } catch (Exception e) {
@@ -78,13 +80,14 @@ public class ClamAVShellService implements ClamAVShellServiceImpl {
     public void disableScans() {
         try{
             Properties properties = new Properties();
-            FileInputStream in = new FileInputStream(PROP_FILE_PATH);
+            String path = PROP_FILE_PATH + "/application.properties";
+            FileInputStream in = new FileInputStream(path);
             properties.load(in);
             in.close();
 
             properties.setProperty("clamav.scans.enabled", "false");
 
-            FileOutputStream out = new FileOutputStream(PROP_FILE_PATH);
+            FileOutputStream out = new FileOutputStream(path);
             properties.store(out, null);
             out.close();
         } catch (Exception e) {
@@ -101,13 +104,14 @@ public class ClamAVShellService implements ClamAVShellServiceImpl {
     public void setPort(int port) {
         try{
             Properties properties = new Properties();
-            FileInputStream in = new FileInputStream(PROP_FILE_PATH);
+             String path = PROP_FILE_PATH + "/application.properties";
+            FileInputStream in = new FileInputStream(path);
             properties.load(in);
             in.close();
 
             properties.setProperty("clamav.port", String.valueOf(port));
 
-            FileOutputStream out = new FileOutputStream(PROP_FILE_PATH);
+            FileOutputStream out = new FileOutputStream(path);
             properties.store(out, null);
             out.close();
         } catch (Exception e) {
@@ -119,13 +123,14 @@ public class ClamAVShellService implements ClamAVShellServiceImpl {
     public void setHost(String host) {
         try{
             Properties properties = new Properties();
-            FileInputStream in = new FileInputStream(PROP_FILE_PATH);
+             String path = PROP_FILE_PATH + "/application.properties";
+            FileInputStream in = new FileInputStream(path);
             properties.load(in);
             in.close();
 
             properties.setProperty("clamav.host", host);
 
-            FileOutputStream out = new FileOutputStream(PROP_FILE_PATH);
+            FileOutputStream out = new FileOutputStream(path);
             properties.store(out, null);
             out.close();
         } catch (Exception e) {
@@ -136,13 +141,14 @@ public class ClamAVShellService implements ClamAVShellServiceImpl {
     private void setScanInterval(long interval) {
         try {
             Properties properties = new Properties();
-            FileInputStream in = new FileInputStream(PROP_FILE_PATH);
+             String path = PROP_FILE_PATH + "/application.properties";
+            FileInputStream in = new FileInputStream(path);
             properties.load(in);
             in.close();
 
             properties.setProperty("scan.interval", String.valueOf(interval));
 
-            FileOutputStream out = new FileOutputStream(PROP_FILE_PATH);
+            FileOutputStream out = new FileOutputStream(path);
             properties.store(out, null);
             out.close();
 

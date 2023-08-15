@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class FileUploadController {
 
-    @GetMapping("/upload")
+    @GetMapping("/home")
     public String showUploadForm() {
         return "upload";
     }
