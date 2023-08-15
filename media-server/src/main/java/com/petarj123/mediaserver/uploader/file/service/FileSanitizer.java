@@ -3,10 +3,33 @@ package com.petarj123.mediaserver.uploader.file.service;
 import com.petarj123.mediaserver.uploader.exceptions.InvalidFileExtensionException;
 import com.petarj123.mediaserver.uploader.file.model.FileType;
 import com.petarj123.mediaserver.uploader.file.model.SanitizedFile;
+import com.petarj123.mediaserver.uploader.file.repository.ExtensionRepository;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
+@RequiredArgsConstructor
 public class FileSanitizer {
+
+    private final ExtensionRepository extensionRepository;
+
+    private List<String> photoExtensions;
+    private List<String> videoExtensions;
+    private List<String> textExtensions;
+    private List<String> pdfExtensions;
+
+    @PostConstruct
+    public void init() {
+        photoExtensions = extensionRepository.findByFileType(FileType.PHOTO).orElseThrow().getExtension();
+        videoExtensions = extensionRepository.findByFileType(FileType.VIDEO).orElseThrow().getExtension();
+        textExtensions = extensionRepository.findByFileType(FileType.TEXT).orElseThrow().getExtension();
+        pdfExtensions = extensionRepository.findByFileType(FileType.PDF).orElseThrow().getExtension();
+    }
+
+
     // TODO Vidi sta treba da se desi ako fajlovi imaju isto ime, ali drugaciji sadrzaj.
     protected SanitizedFile sanitizeFileName(String originalFilename) throws InvalidFileExtensionException {
         String sanitized = originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_");
@@ -32,10 +55,6 @@ public class FileSanitizer {
         return new SanitizedFile(sanitized, fileType);
     }
     private FileType determineFileType(String filename) throws InvalidFileExtensionException {
-        String[] photoExtensions = {".jpg", ".jpeg", ".png", ".gif", ".bmp"};
-        String[] videoExtensions = {".mp4", ".avi", ".mkv", ".mov", ".flv"};
-        String[] textExtensions = {".txt", ".md", ".doc", ".docx"};
-        String[] pdfExtensions = {".pdf"};
         filename = filename.toLowerCase();
         for (String ext : photoExtensions) {
             if (filename.endsWith(ext)) {
