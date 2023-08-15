@@ -33,7 +33,8 @@ public class FileSystemService {
     private final FileRepository fileRepository;
     @Value("${fileStorage.path}")
     private String serverFolderPath;
-
+    @Value("${clamav.enabled}")
+    private boolean clamAVEnabled;
     protected void checkFileIsEmpty(MultipartFile multipartFile) throws FileException {
         if (multipartFile.isEmpty()) {
             throw new FileException("File is empty");
@@ -49,10 +50,12 @@ public class FileSystemService {
     }
 
     protected void scanWithClamAV(Path path, MultipartFile multipartFile) throws InfectedFileException, IOException {
-        ScanResult scanResult = clamAVService.scanFile(path);
-        if (!scanResult.isClean()) {
-            Files.delete(path);
-            throw new InfectedFileException("File " + multipartFile.getOriginalFilename() + " is infected and has been deleted.");
+        if (clamAVEnabled) {
+            ScanResult scanResult = clamAVService.scanFile(path);
+            if (!scanResult.isClean()) {
+                Files.delete(path);
+                throw new InfectedFileException("File " + multipartFile.getOriginalFilename() + " is infected and has been deleted.");
+            }
         }
     }
 
