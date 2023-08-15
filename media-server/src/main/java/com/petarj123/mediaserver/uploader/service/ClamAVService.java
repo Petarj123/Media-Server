@@ -72,8 +72,7 @@ public class ClamAVService {
         return new ScanResult(file.toString(), isClean);
     }
 
-    // TODO Retry Mechanism, Asynchronous Scanning, Batch Scanning
-    @Scheduled(fixedRate = 24 * 60 * 60 * 1000)
+    // TODO Retry Mechanism, Asynchronous Scanning, Batch Scanning,
     public void scanServer() {
         try (Stream<Path> paths = Files.walk(Paths.get(serverFolderPath))) {
             paths
