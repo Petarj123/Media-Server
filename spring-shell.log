@@ -4,3 +4,13 @@
 1692029314604:backup
 1692029697551:connect mongodb://localhost:27017/ test
 1692029760540:connect mongodb://localhost:27017/ server
+1692095147774:se PHOTO .heic
+1692095155102:help
+1692095166569:setExtensions help
+1692095181057:setExtensions PHOTO {.heic}
+1692095221763:setExtensions PHOTO .tiff .webp
+1692095235377:stacktrace
+1692096586595:se PHOTO .heic
+1692096603891:rmExt PHOTO .heic
+1692096609129:stacktrace
+1692096671069:rmExt PHOTO .heic
