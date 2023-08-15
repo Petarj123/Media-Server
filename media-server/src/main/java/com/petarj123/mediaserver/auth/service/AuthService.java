@@ -1,5 +1,6 @@
 package com.petarj123.mediaserver.auth.service;
 
+import com.petarj123.mediaserver.auth.DTO.LoginResponse;
 import com.petarj123.mediaserver.auth.exceptions.*;
 import com.petarj123.mediaserver.auth.jwt.service.JwtService;
 import com.petarj123.mediaserver.auth.user.model.Role;
@@ -28,14 +29,16 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public String login(String usernameOrEmail, String password) {
+    public LoginResponse login(String usernameOrEmail, String password) {
 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 usernameOrEmail, password));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        return jwtService.generateToken(authentication);
+        return LoginResponse.builder()
+                .token(jwtService.generateToken(authentication))
+                .build();
     }
     public void register(String username, String email, String password, String confirmPassword) throws PasswordMismatchException, InvalidPasswordException, InvalidEmailException, UsernameExistsException, EmailExistsException {
 

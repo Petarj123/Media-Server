@@ -1,6 +1,7 @@
 package com.petarj123.mediaserver.auth.controller;
 
 import com.petarj123.mediaserver.auth.DTO.LoginRequest;
+import com.petarj123.mediaserver.auth.DTO.LoginResponse;
 import com.petarj123.mediaserver.auth.DTO.RegistrationRequest;
 import com.petarj123.mediaserver.auth.exceptions.*;
 import com.petarj123.mediaserver.auth.service.AuthService;
@@ -17,7 +18,7 @@ public class AuthController {
 
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
-    public String login(@RequestBody LoginRequest loginRequest) {
+    public LoginResponse login(@RequestBody LoginRequest loginRequest) {
         return authService.login(loginRequest.usernameOrEmail(), loginRequest.password());
     }
     @PostMapping("/register")
