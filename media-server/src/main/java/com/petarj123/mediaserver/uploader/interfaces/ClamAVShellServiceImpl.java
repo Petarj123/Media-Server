@@ -11,7 +11,7 @@ public interface ClamAVShellServiceImpl {
 
     void disableScans();
 
-    void scheduleScans(LocalDateTime time);
+    void scheduleScans(long ms);
 
     void setPort(int port);
 
