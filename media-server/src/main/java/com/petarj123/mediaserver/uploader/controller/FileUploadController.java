@@ -10,8 +10,12 @@ public class FileUploadController {
     public String showUploadForm() {
         return "upload";
     }
-    @GetMapping("/login")
+    @GetMapping("/")
     public String getLoginForm() {
         return "login";
+    }
+    @GetMapping("/register")
+    public String getRegisterForm() {
+        return "register";
     }
 }
