@@ -3,7 +3,9 @@ function closeErrorPopup() {
     const errorPopup = document.getElementById('errorPopup');
     errorPopup.style.display = 'none';
 }
-
+function getJwtToken() {
+    return localStorage.getItem('token');
+}
 document.addEventListener("DOMContentLoaded", function() {
 
     // Local helper function
@@ -25,7 +27,8 @@ document.addEventListener("DOMContentLoaded", function() {
             method: 'POST',
             body: JSON.stringify({ name: folderName }),
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + getJwtToken()
             }
         })
         .then(response => {
@@ -54,18 +57,17 @@ document.addEventListener("DOMContentLoaded", function() {
             method: 'DELETE',
             body: JSON.stringify({ name: folderName }),
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + getJwtToken()
             }
         })
         .then(response => {
-            if (response.ok) {
-                return response.json();
+            if (response.status === 204) {
+                console.log('Deleted');
             }
-            throw new Error('Failed to delete folder');
-        })
-        .then(data => {
-            console.log(data);
-            // Handle the successful deletion of a folder (e.g., update the UI)
+            if (response.status === 400) {
+                throw new Error("Unable to delete folder");
+            }
         })
         .catch(error => {
             console.error('Error:', error);
@@ -88,6 +90,9 @@ document.addEventListener("DOMContentLoaded", function() {
         fetch('/file/upload', {
             method: 'POST',
             body: formData,
+            headers: {
+                'Authorization': 'Bearer ' + getJwtToken()
+            }
         })
         .then(response => {
             if (response.ok) {
@@ -106,7 +111,11 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     // Fetch all folders and populate the folderList div
-    fetch('/folder/all')
+    fetch('/folder/all', {
+            headers: {
+                'Authorization': 'Bearer ' + getJwtToken()
+            }
+        })    
     .then(response => response.json())
     .then(data => {
         const folderList = document.getElementById('folderList');
@@ -129,7 +138,11 @@ document.addEventListener("DOMContentLoaded", function() {
                     }
                 } else {
                     // If not populated, fetch files and display
-                    fetch(`/folder/${folder.name}/files`)
+                    fetch(`/folder/${folder.name}/files`, {
+                        headers: {
+                            'Authorization': 'Bearer ' + getJwtToken()
+                        }
+                    })
                     .then(response => response.json())
                     .then(files => {
                         files.forEach(fileName => {
