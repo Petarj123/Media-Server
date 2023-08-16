@@ -54,7 +54,9 @@ public class FolderService implements FolderServiceImpl {
         List<Folder> folderList = new ArrayList<>();
         if (folders != null) {
             for (File folder : folders) {
-                folderList.add(new Folder(folder.getName(), new Date(folder.lastModified())));
+                if (!folder.getName().equals("temp") && !folder.getName().equals("backup")){
+                    folderList.add(new Folder(folder.getName(), new Date(folder.lastModified())));
+                }
             }
         }
         return folderList;
@@ -81,12 +83,11 @@ public class FolderService implements FolderServiceImpl {
     }
 
     @Override
-    public boolean deleteFolder(String folderName) throws FolderException {
+    public void deleteFolder(String folderName) throws FolderException {
         File folder = new File(serverFolderPath + folderName);
         if (folder.exists() && folder.isDirectory()) {
             try {
                 FileUtils.deleteDirectory(folder); // Apache Commons IO utility
-                return true;
             } catch (IOException e) {
                 throw new FolderException("Failed to delete folder. Error: " + e.getMessage());
             }
