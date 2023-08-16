@@ -34,7 +34,7 @@ public class FolderController {
 
     @DeleteMapping("/delete")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public boolean deleteFolder(@RequestBody FolderDTO request) throws FolderException {
-        return folderService.deleteFolder(request.name());
+    public void deleteFolder(@RequestBody FolderDTO request) throws FolderException {
+        folderService.deleteFolder(request.name());
     }
 }
