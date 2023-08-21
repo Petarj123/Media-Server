@@ -2,6 +2,7 @@ package com.petarj123.mediaserver.uploader.file.service;
 
 import com.petarj123.mediaserver.uploader.DTO.ScanResult;
 import com.petarj123.mediaserver.uploader.exceptions.FileException;
+import com.petarj123.mediaserver.uploader.exceptions.InfectedFileException;
 import com.petarj123.mediaserver.uploader.exceptions.InvalidFileExtensionException;
 import com.petarj123.mediaserver.uploader.file.model.File;
 import com.petarj123.mediaserver.uploader.file.model.SanitizedFile;
@@ -66,6 +67,8 @@ public class FileService implements FileServiceImpl {
 
             // 10. Return the result of the operation, indicating the file's final path and confirming its safety
             return new ScanResult(finalTargetPath.toString(), true);
+        } catch (InfectedFileException e) {
+            throw new RuntimeException(e);
         } finally {
             // Delete the file from the temporary directory, regardless of whether an exception was thrown or not
             Files.deleteIfExists(tempTargetPath);

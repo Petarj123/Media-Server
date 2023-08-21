@@ -86,6 +86,8 @@ public class ClamAVService {
                             }
                         } catch (IOException e) {
                             logger.error("Error scanning or deleting file: {}", file.getFileName(), e);
+                        } catch (InfectedFileException e) {
+                            throw new RuntimeException(e);
                         }
                     });
         } catch (IOException e) {
