@@ -22,24 +22,26 @@ public class FolderController {
     @ResponseStatus(HttpStatus.CREATED)
     @RateLimiter(name = "fileAndFolder")
     public Folder createFolder(@RequestBody FolderDTO request) throws FolderException {
-        return folderService.createFolder(request.name());
+        return folderService.createFolder(request.name(), request.folderId()); // request.folderId() In this case this gets parent folder id
     }
     @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)
     @RateLimiter(name = "fileAndFolder")
-    public List<Folder> getAllFolders() throws FolderException {
-        return folderService.getAllFolders();
+    public List<Folder> getAllFolders(@RequestHeader("Authorization") String header) throws FolderException {
+        String token = header.substring(7);
+        return folderService.getAllFolders(token);
     }
-    @GetMapping("/{folderName}/files")
+    @GetMapping("/files")
     @RateLimiter(name = "fileAndFolder")
-    public List<String> getFilesInFolder(@PathVariable String folderName) throws FolderException {
-        return folderService.getFolderFiles(folderName);
+    public List<String> getFilesInFolder(@RequestHeader("Authorization") String header, @RequestBody FolderDTO request) throws FolderException {
+        String token = header.substring(7);
+        return folderService.getFolderFiles(token, request.folderId());
     }
 
     @DeleteMapping("/delete")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @RateLimiter(name = "fileAndFolder")
     public void deleteFolder(@RequestBody FolderDTO request) throws FolderException {
-        folderService.deleteFolder(request.name());
+        folderService.deleteFolder(request.folderId());
     }
 }

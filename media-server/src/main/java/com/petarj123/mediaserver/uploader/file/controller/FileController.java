@@ -2,6 +2,7 @@ package com.petarj123.mediaserver.uploader.file.controller;
 
 import com.petarj123.mediaserver.uploader.DTO.ScanResult;
 import com.petarj123.mediaserver.uploader.exceptions.FileException;
+import com.petarj123.mediaserver.uploader.exceptions.FolderException;
 import com.petarj123.mediaserver.uploader.exceptions.InvalidFileExtensionException;
 import com.petarj123.mediaserver.uploader.file.service.FileService;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
@@ -25,17 +26,17 @@ public class FileController {
     @PostMapping("/upload")
     @ResponseStatus(HttpStatus.CREATED)
     @RateLimiter(name = "fileAndFolder")
-    public List<ScanResult> upload(@RequestParam("files") MultipartFile[] files, @RequestParam("folderName") String folderName) throws FileException, InvalidFileExtensionException, EncoderException, IOException {
+    public List<ScanResult> upload(@RequestParam("files") MultipartFile[] files, @RequestParam("folderId") String folderId) throws FileException, InvalidFileExtensionException, EncoderException, IOException {
         List<ScanResult> scanResults = new ArrayList<>();
         for (MultipartFile file : files) {
-            scanResults.add(fileService.saveFile(file, folderName));
+            scanResults.add(fileService.saveFile(file, folderId));
         }
         return scanResults;
     }
     @DeleteMapping("/delete")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @RateLimiter(name = "fileAndFolder")
-    public boolean delete(@RequestParam("fileName") String fileName, @RequestParam("folderName") String folderName) throws FileException {
+    public boolean delete(@RequestParam("fileName") String fileName, @RequestParam("folderId") String folderName) throws FileException, FolderException {
         return fileService.deleteFile(fileName, folderName);
     }
     @PutMapping("/move")

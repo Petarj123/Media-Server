@@ -56,28 +56,17 @@ public class FileSanitizer {
     }
     private FileType determineFileType(String filename) throws InvalidFileExtensionException {
         filename = filename.toLowerCase();
-        for (String ext : photoExtensions) {
-            if (filename.endsWith(ext)) {
-                return FileType.PHOTO;
-            }
+        if (checkExtensionInList(filename, photoExtensions)) {
+            return FileType.PHOTO;
         }
-
-        for (String ext : videoExtensions) {
-            if (filename.endsWith(ext)) {
-                return FileType.VIDEO;
-            }
+        if (checkExtensionInList(filename, videoExtensions)) {
+            return FileType.VIDEO;
         }
-
-        for (String ext : textExtensions) {
-            if (filename.endsWith(ext)) {
-                return FileType.TEXT;
-            }
+        if (checkExtensionInList(filename, textExtensions)) {
+            return FileType.TEXT;
         }
-
-        for (String ext : pdfExtensions) {
-            if (filename.endsWith(ext)) {
-                return FileType.PDF;
-            }
+        if (checkExtensionInList(filename, pdfExtensions)) {
+            return FileType.PDF;
         }
 
         throw new InvalidFileExtensionException("Unsupported file extension: " + getExtension(filename));
@@ -85,5 +74,13 @@ public class FileSanitizer {
     private String getExtension(String filename) {
         int dotIndex = filename.lastIndexOf(".");
         return (dotIndex == -1) ? "" : filename.substring(dotIndex);
+    }
+    private boolean checkExtensionInList(String filename, List<String> extensions){
+        for (String ext : extensions){
+            if (filename.endsWith(ext)){
+                return true;
+            }
+        }
+        return false;
     }
 }

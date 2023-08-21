@@ -8,6 +8,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Map;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -23,4 +24,17 @@ public class File {
     private Integer version;
     private Map<String, Object> metadata;
     private String folderId;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        File file = (File) o;
+        return Objects.equals(fileName, file.fileName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(fileName);
+    }
 }

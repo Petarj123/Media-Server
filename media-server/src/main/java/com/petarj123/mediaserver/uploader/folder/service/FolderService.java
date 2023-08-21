@@ -1,5 +1,6 @@
 package com.petarj123.mediaserver.uploader.folder.service;
 
+import com.petarj123.mediaserver.auth.jwt.service.JwtService;
 import com.petarj123.mediaserver.uploader.exceptions.FolderException;
 import com.petarj123.mediaserver.uploader.folder.model.Folder;
 import com.petarj123.mediaserver.uploader.folder.repository.FolderRepository;
@@ -22,77 +23,77 @@ import java.util.List;
 public class FolderService implements FolderServiceImpl {
 
     private final FolderRepository folderRepository;
-    @Value("${fileStorage.path}")
-    private String serverFolderPath;
+    private final JwtService jwtService;
 
     @Override
-    public Folder createFolder(String name) throws FolderException {
+    public Folder createFolder(String name, String parentFolderId) throws FolderException {
+        Folder parentFolder = folderRepository.findById(parentFolderId)
+                .orElseThrow(() -> new FolderException("Parent folder not found."));
+        String sanitizedName = sanitizeFolderName(name);
+        String folderPath = parentFolder.getPath() + File.separator + sanitizedName;
+        File newFolder = new File(folderPath);
+
+        if (newFolder.exists()) {
+            throw new FolderException("Folder already exists.");
+        }
+
         try {
-            Path rootPath = Paths.get(serverFolderPath);
-            if (!Files.exists(rootPath)) {
-                Files.createDirectories(rootPath);
+            Folder folder = Folder.builder()
+                    .name(sanitizedName)
+                    .path(folderPath)
+                    .parentFolderId(parentFolderId)
+                    .createdAt(new Date())
+                    .build();
+
+            Folder savedFolder = folderRepository.save(folder);
+
+            if (parentFolder.getChildFolderIds() == null) {
+                parentFolder.setChildFolderIds(new ArrayList<>());
             }
-            String sanitizedName = sanitizeFolderName(name);
-            Path folderPath = rootPath.resolve(sanitizedName);
-            if (!Files.exists(folderPath)) {
-                Files.createDirectory(folderPath);
-                return Folder.builder()
-                        .name(sanitizedName)
-                        .createdAt(new Date())
-                        .build();
-            } else {
-                throw new FolderException("Folder " + sanitizedName + " already exists.");
-            }
+            parentFolder.getChildFolderIds().add(savedFolder.getId());
+
+            folderRepository.save(parentFolder);
+            Files.createDirectory(newFolder.toPath());
+            return savedFolder;
         } catch (IOException e) {
             throw new FolderException("Failed to create folder. Error: " + e.getMessage());
         }
     }
 
     @Override
-    public List<Folder> getAllFolders() throws FolderException {
-        File baseDirectory = new File(serverFolderPath);
-        if (!baseDirectory.exists()) {
-            throw new FolderException("Server folder path does not exist.");
-        }
-
-        File[] folders = baseDirectory.listFiles(File::isDirectory);
-        List<Folder> folderList = new ArrayList<>();
-        if (folders != null) {
-            for (File folder : folders) {
-                if (!folder.getName().equals("temp") && !folder.getName().equals("backup")){
-                    folderList.add(new Folder());
-                }
-            }
-        }
-        return folderList;
+    public List<Folder> getAllFolders(String token) throws FolderException {
+        Folder userMainFolder = getUserMainFolder(token);
+        return folderRepository.findAllByPathStartingWith(userMainFolder.getPath());
     }
 
     @Override
-    public List<String> getFolderFiles(String folderName) throws FolderException {
-        File folder = new File(serverFolderPath + File.separator + folderName);
+    public List<String> getFolderFiles(String token, String folderId) throws FolderException {
+        Folder folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new FolderException("Folder not found."));
 
-        if (!folder.isDirectory()) {
-            throw new FolderException("Given path is not a directory.");
-        }
+        // TODO Must return all folders and files from this folder
 
-        File[] files = folder.listFiles(File::isFile);
-        List<String> fileNames = new ArrayList<>();
-
-        if (files != null) {
-            for (File file : files) {
-                fileNames.add(file.getName());
-            }
-        }
-
-        return fileNames;
+        return null;
     }
 
     @Override
-    public void deleteFolder(String folderName) throws FolderException {
-        File folder = new File(serverFolderPath + folderName);
-        if (folder.exists() && folder.isDirectory()) {
+    public void deleteFolder(String folderId) throws FolderException {
+        Folder folderToDelete = folderRepository.findById(folderId)
+                .orElseThrow(() -> new FolderException("Folder not found."));
+
+        File folderFile = new File(folderToDelete.getPath());
+        if (folderFile.exists() && folderFile.isDirectory()) {
             try {
-                FileUtils.deleteDirectory(folder); // Apache Commons IO utility
+                FileUtils.deleteDirectory(folderFile);
+
+                if (folderToDelete.getParentFolderId() != null) {
+                    Folder parentFolder = folderRepository.findById(folderToDelete.getParentFolderId())
+                            .orElseThrow(() -> new FolderException("Parent folder not found."));
+                    parentFolder.getChildFolderIds().remove(folderId);
+                    folderRepository.save(parentFolder);
+                }
+
+                folderRepository.delete(folderToDelete);
             } catch (IOException e) {
                 throw new FolderException("Failed to delete folder. Error: " + e.getMessage());
             }
@@ -121,5 +122,9 @@ public class FolderService implements FolderServiceImpl {
 
         return sanitized;
     }
-
+    private Folder getUserMainFolder(String token) throws FolderException {
+        String userEmail = jwtService.getEmail(token);
+        return folderRepository.findByName(userEmail)
+                .orElseThrow(() -> new FolderException("User's main folder not found."));
+    }
 }

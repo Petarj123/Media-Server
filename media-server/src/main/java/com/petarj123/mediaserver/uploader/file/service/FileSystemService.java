@@ -7,6 +7,8 @@ import com.petarj123.mediaserver.uploader.file.model.File;
 import com.petarj123.mediaserver.uploader.file.model.FileType;
 import com.petarj123.mediaserver.uploader.file.model.SanitizedFile;
 import com.petarj123.mediaserver.uploader.file.repository.FileRepository;
+import com.petarj123.mediaserver.uploader.folder.model.Folder;
+import com.petarj123.mediaserver.uploader.folder.repository.FolderRepository;
 import com.petarj123.mediaserver.uploader.service.ClamAVService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,10 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +30,7 @@ public class FileSystemService {
 
     protected final ClamAVService clamAVService;
     private final FileRepository fileRepository;
+    private final FolderRepository folderRepository;
     @Value("${fileStorage.path}")
     private String serverFolderPath;
     @Value("${clamav.enabled}")
@@ -59,8 +59,8 @@ public class FileSystemService {
         }
     }
 
-    protected Path prepareFinalPath(SanitizedFile sanitizedFileName, String folderName) throws IOException, FileException {
-        Path finalFolderPath = Paths.get(serverFolderPath, folderName);
+    protected Path prepareFinalPath(SanitizedFile sanitizedFileName, String folderPath) throws IOException, FileException {
+        Path finalFolderPath = Paths.get(folderPath); // Use the provided folder path directly
         if (!Files.exists(finalFolderPath)) {
             Files.createDirectories(finalFolderPath);
         }
@@ -84,16 +84,26 @@ public class FileSystemService {
         return metadata;
     }
 
-    protected void buildAndSaveFile(SanitizedFile sanitizedFileName, Path finalTargetPath, FileType fileType, Map<String, Object> metadata) {
-        Optional<File> existingFile = fileRepository.findByFileName(sanitizedFileName);
+    protected void buildAndSaveFile(SanitizedFile sanitizedFileName, Path finalTargetPath, FileType fileType, Map<String, Object> metadata, Folder folder) {
+        Optional<File> existingFile = fileRepository.findByFileName(sanitizedFileName.name);
         int version = existingFile.map(file -> file.getVersion() + 1).orElse(1);
+
         File file = File.builder()
                 .fileName(sanitizedFileName.name)
                 .filePath(finalTargetPath.toString())
                 .fileType(fileType)
                 .version(version)
                 .metadata(metadata)
+                .folderId(folder.getId())
                 .build();
         fileRepository.save(file);
+
+        // Update the folder to link to the new file
+        if (folder.getChildFileIds() == null) {
+            folder.setChildFileIds(new ArrayList<>());
+        }
+        folder.getChildFileIds().add(file.getId());
+        folderRepository.save(folder);
     }
+
 }

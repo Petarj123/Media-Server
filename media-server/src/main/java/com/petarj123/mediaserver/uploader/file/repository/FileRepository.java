@@ -11,4 +11,7 @@ import java.util.Optional;
 public interface FileRepository extends MongoRepository<File, String> {
     Optional<File> findByFileName(SanitizedFile sanitizedFileName);
     Optional<File> findByFileName(String fileName);
+    Optional<File> findByFileNameAndFolderId(String fileName, String folderId);
+    long countByFileName(String fileName);
+
 }
