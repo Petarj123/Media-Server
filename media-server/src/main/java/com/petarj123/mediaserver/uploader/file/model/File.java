@@ -22,4 +22,5 @@ public class File {
     private FileType fileType;
     private Integer version;
     private Map<String, Object> metadata;
+    private String folderId;
 }

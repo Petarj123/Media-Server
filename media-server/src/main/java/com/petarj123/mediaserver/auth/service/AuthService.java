@@ -6,17 +6,26 @@ import com.petarj123.mediaserver.auth.jwt.service.JwtService;
 import com.petarj123.mediaserver.auth.user.model.Role;
 import com.petarj123.mediaserver.auth.user.model.User;
 import com.petarj123.mediaserver.auth.user.repository.UserRepository;
+import com.petarj123.mediaserver.uploader.exceptions.FolderException;
+import com.petarj123.mediaserver.uploader.folder.model.Folder;
+import com.petarj123.mediaserver.uploader.folder.repository.FolderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
@@ -28,6 +37,9 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final FolderRepository folderRepository;
+    @Value("${fileStorage.path}")
+    private String serverFolderPath;
 
     public LoginResponse login(String usernameOrEmail, String password) {
 
@@ -40,7 +52,7 @@ public class AuthService {
                 .token(jwtService.generateToken(authentication))
                 .build();
     }
-    public void register(String username, String email, String password, String confirmPassword) throws PasswordMismatchException, InvalidPasswordException, InvalidEmailException, UsernameExistsException, EmailExistsException {
+    public void register(String username, String email, String password, String confirmPassword) throws PasswordMismatchException, InvalidPasswordException, InvalidEmailException, UsernameExistsException, EmailExistsException, FolderException {
 
         if (userRepository.existsByUsername(username)) {
             throw new UsernameExistsException("Username already exists");
@@ -60,15 +72,46 @@ public class AuthService {
             throw new PasswordMismatchException("Passwords do not match");
         }
 
+        User user = createUser(username, email, password);
+        Folder folder = createUserFolder(email);
+
+        userRepository.save(user);
+        folderRepository.save(folder);
+    }
+    private User createUser(String username, String email, String password) {
         User user = User.builder()
                 .username(username)
                 .email(email)
                 .password(passwordEncoder.encode(password))
                 .roles(new HashSet<>())
+                .userFolderPath(serverFolderPath + email)
                 .createdAt(new Date())
                 .isLocked(false)
                 .build();
         user.setRoles(new HashSet<>(List.of(Role.USER)));
-        userRepository.save(user);
+        return user;
+    }
+    private Folder createUserFolder(String name) throws FolderException {
+        try {
+            Path path = Paths.get(serverFolderPath);
+            if (!Files.exists(path)){
+                Files.createDirectory(path);
+            }
+            Path folderPath = path.resolve(name);
+            if (!Files.exists(folderPath)){
+                Files.createDirectory(folderPath);
+                return Folder.builder()
+                        .name(name)
+                        .path(String.valueOf(folderPath))
+                        .parentFolderId(null)
+                        .createdAt(new Date())
+                        .modifiedAt(new Date())
+                        .build();
+            } else {
+                throw new FolderException("Folder " + name + " already exists.");
+            }
+        } catch (IOException e) {
+            throw new FolderException("Failed to create folder. Error: " + e.getMessage());
+        }
     }
 }

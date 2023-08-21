@@ -2,7 +2,9 @@ package com.petarj123.mediaserver.uploader.folder.service;
 
 import com.petarj123.mediaserver.uploader.exceptions.FolderException;
 import com.petarj123.mediaserver.uploader.folder.model.Folder;
+import com.petarj123.mediaserver.uploader.folder.repository.FolderRepository;
 import com.petarj123.mediaserver.uploader.interfaces.FolderServiceImpl;
+import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,7 +18,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 @Service
+@RequiredArgsConstructor
 public class FolderService implements FolderServiceImpl {
+
+    private final FolderRepository folderRepository;
     @Value("${fileStorage.path}")
     private String serverFolderPath;
 
@@ -55,7 +60,7 @@ public class FolderService implements FolderServiceImpl {
         if (folders != null) {
             for (File folder : folders) {
                 if (!folder.getName().equals("temp") && !folder.getName().equals("backup")){
-                    folderList.add(new Folder(folder.getName(), new Date(folder.lastModified())));
+                    folderList.add(new Folder());
                 }
             }
         }

@@ -5,6 +5,7 @@ import com.petarj123.mediaserver.auth.DTO.LoginResponse;
 import com.petarj123.mediaserver.auth.DTO.RegistrationRequest;
 import com.petarj123.mediaserver.auth.exceptions.*;
 import com.petarj123.mediaserver.auth.service.AuthService;
+import com.petarj123.mediaserver.uploader.exceptions.FolderException;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,7 +27,7 @@ public class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     @RateLimiter(name = "auth")
-    public void register(@RequestBody RegistrationRequest request) throws PasswordMismatchException, InvalidPasswordException, UsernameExistsException, EmailExistsException, InvalidEmailException {
+    public void register(@RequestBody RegistrationRequest request) throws PasswordMismatchException, InvalidPasswordException, UsernameExistsException, EmailExistsException, InvalidEmailException, FolderException {
         authService.register(request.username(), request.email(), request.password(), request.confirmPassword());
     }
 }

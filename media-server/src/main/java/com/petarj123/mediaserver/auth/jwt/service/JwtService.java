@@ -61,6 +61,16 @@ public class JwtService implements JwtImpl {
     }
 
     @Override
+    public String getEmail(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("email", String.class);
+    }
+
+    @Override
     public boolean validateToken(String token) {
         try{
             Jwts.parserBuilder()
