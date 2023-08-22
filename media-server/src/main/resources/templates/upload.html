@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>File Upload and Folder Management</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <script th:src="@{/js/folderManager.js}" defer></script>
+</head>
+<body>
+<div class="container">
+    <h2>Folder Management</h2>
+
+    <form id="createFolderForm">
+        <input type="text" name="name" placeholder="Enter folder name" required />
+        <button type="button" id="createFolderButton">Create Folder</button>
+    </form>
+
+    <h3>All Folders</h3>
+    <div id="folderList">
+        <!-- Populate this using Thymeleaf. For now, just a placeholder -->
+    </div>
+
+    <form id="deleteFolderForm">
+        <input type="text" name="folderName" placeholder="Folder name to delete" required />
+        <button type="button" id="deleteFolderButton">Delete Folder</button>
+    </form>
+
+    <h3>Upload Images</h3>
+    <form id="uploadImageForm" enctype="multipart/form-data">
+        <input type="text" name="folderName" placeholder="Enter folder name" required />
+        <input type="file" name="file" accept="image/*" multiple required />
+        <button type="button" id="uploadImageButton">Upload</button>
+    </form>
+</div>
+
+<!-- Error Popup -->
+<div id="errorPopup" class="error-popup" style="display: none;">
+    <div class="error-message">
+        <p id="errorMessage">Error message goes here.</p>
+        <button class="close-btn" onclick="closeErrorPopup()">Close</button>
+    </div>
+</div>
+</body>
+</html>
