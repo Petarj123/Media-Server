@@ -7,6 +7,7 @@ import com.petarj123.mediaserver.auth.user.model.Role;
 import com.petarj123.mediaserver.auth.user.model.User;
 import com.petarj123.mediaserver.auth.user.repository.UserRepository;
 import com.petarj123.mediaserver.uploader.exceptions.FolderException;
+import com.petarj123.mediaserver.uploader.file.model.FileType;
 import com.petarj123.mediaserver.uploader.folder.model.Folder;
 import com.petarj123.mediaserver.uploader.folder.repository.FolderRepository;
 import lombok.RequiredArgsConstructor;
@@ -106,6 +107,7 @@ public class AuthService {
                         .parentFolderId(null)
                         .createdAt(new Date())
                         .modifiedAt(new Date())
+                        .fileType(FileType.FOLDER)
                         .build();
             } else {
                 throw new FolderException("Folder " + name + " already exists.");

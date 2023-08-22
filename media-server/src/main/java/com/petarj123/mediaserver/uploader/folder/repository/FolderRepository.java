@@ -13,4 +13,8 @@ public interface FolderRepository extends MongoRepository<Folder, String> {
     Optional<Folder> findByName(String name);
 
     List<Folder> findAllByPathStartingWith(String pathPrefix);
+
+    Optional<Folder> findByPath(String userFolderPath);
+
+    List<Folder> findAllByIdIn(List<String> childFolderIds);
 }

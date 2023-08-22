@@ -1,5 +1,6 @@
 package com.petarj123.mediaserver.uploader.folder.model;
 
+import com.petarj123.mediaserver.uploader.file.model.FileType;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -21,6 +22,7 @@ public class Folder {
     private String parentFolderId;
     private List<String> childFolderIds;
     private List<String> childFileIds;
+    private FileType fileType;
     private Date createdAt;
     private Date modifiedAt;
 }
