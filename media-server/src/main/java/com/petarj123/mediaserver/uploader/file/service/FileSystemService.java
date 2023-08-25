@@ -85,7 +85,7 @@ public class FileSystemService {
     }
 
     protected void buildAndSaveFile(SanitizedFile sanitizedFileName, Path finalTargetPath, FileType fileType, Map<String, Object> metadata, Folder folder) {
-        Optional<File> existingFile = fileRepository.findByFileName(sanitizedFileName.name);
+        Optional<File> existingFile = fileRepository.findByFileNameAndFilePath(sanitizedFileName.name, finalTargetPath.toString());
         int version = existingFile.map(file -> file.getVersion() + 1).orElse(1);
 
         File file = File.builder()

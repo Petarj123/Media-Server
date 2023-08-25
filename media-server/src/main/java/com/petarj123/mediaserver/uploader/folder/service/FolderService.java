@@ -13,7 +13,10 @@ import com.petarj123.mediaserver.uploader.folder.repository.FolderRepository;
 import com.petarj123.mediaserver.uploader.interfaces.FolderServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +33,7 @@ public class FolderService implements FolderServiceImpl {
     private final UserRepository userRepository;
 
     @Override
+    @CacheEvict(value = {"mainFolder", "folder"}, allEntries = true)
     public Folder createFolder(String name, String parentFolderId) throws FolderException {
         Folder parentFolder = folderRepository.findById(parentFolderId)
                 .orElseThrow(() -> new FolderException("Parent folder not found."));
@@ -48,6 +52,7 @@ public class FolderService implements FolderServiceImpl {
                     .parentFolderId(parentFolderId)
                     .createdAt(new Date())
                     .fileType(FileType.FOLDER)
+                    .isMainFolder(false)
                     .build();
 
             Folder savedFolder = folderRepository.save(folder);
@@ -66,6 +71,7 @@ public class FolderService implements FolderServiceImpl {
     }
 
     @Override
+    @Cacheable(value = "mainFolder")
     public Map<String, List<Item>> fetchMainFolder(String token) throws FolderException, InvalidEmailException {
         String email = jwtService.getEmail(token);
 
@@ -93,6 +99,7 @@ public class FolderService implements FolderServiceImpl {
     }
 
     @Override
+    @Cacheable(value = "folder")
     public Map<String, List<Item>> getFolderFiles(String folderId) throws FolderException {
         Folder folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new FolderException("Folder not found."));
@@ -115,8 +122,9 @@ public class FolderService implements FolderServiceImpl {
         result.put(folder.getId(), list);
         return result;
     }
-
     @Override
+    @Transactional
+    @CacheEvict(value = {"mainFolder", "folder"}, allEntries = true)
     public void deleteFolder(String folderId) throws FolderException {
         if (folderId == null || folderId.trim().isEmpty()) {
             throw new FolderException("Invalid folder ID.");
@@ -125,10 +133,15 @@ public class FolderService implements FolderServiceImpl {
         Folder folderToDelete = folderRepository.findById(folderId)
                 .orElseThrow(() -> new FolderException("Folder not found."));
 
+        if (folderToDelete.isMainFolder()) {
+            throw new FolderException("Main folder can't be deleted");
+        }
+
         File folderFile = new File(folderToDelete.getPath());
         if (folderFile.exists() && folderFile.isDirectory()) {
             try {
-                FileUtils.deleteDirectory(folderFile);
+                // Recursive deletion of child folders and files
+                deleteChildren(folderToDelete);
 
                 if (folderToDelete.getParentFolderId() != null) {
                     Folder parentFolder = folderRepository.findById(folderToDelete.getParentFolderId())
@@ -139,7 +152,9 @@ public class FolderService implements FolderServiceImpl {
                     }
                 }
 
+                FileUtils.deleteDirectory(folderFile);
                 folderRepository.delete(folderToDelete);
+
             } catch (IOException e) {
                 throw new FolderException("Failed to delete folder. Error: " + e.getMessage());
             }
@@ -147,7 +162,6 @@ public class FolderService implements FolderServiceImpl {
             throw new FolderException("Folder does not exist or is not a directory.");
         }
     }
-
 
     private String sanitizeFolderName(String originalName) {
         // Replace spaces with underscores
@@ -161,19 +175,15 @@ public class FolderService implements FolderServiceImpl {
             sanitized = sanitized.substring(1);
         }
 
-        // Limit the length if needed
-        int maxLength = 255; // for example
+        // Limit the length
+        int maxLength = 255;
         if (sanitized.length() > maxLength) {
             sanitized = sanitized.substring(0, maxLength);
         }
 
         return sanitized;
     }
-    private Folder getUserMainFolder(String token) throws FolderException {
-        String userEmail = jwtService.getEmail(token);
-        return folderRepository.findByName(userEmail)
-                .orElseThrow(() -> new FolderException("User's main folder not found."));
-    }
+
     private Item convertToItem(Folder folder) {
         return new Item(folder.getId(), folder.getName(), folder.getPath(), folder.getFileType());
     }
@@ -181,4 +191,22 @@ public class FolderService implements FolderServiceImpl {
         return new Item(file.getId(), file.getFileName(), file.getFilePath(), file.getFileType());
 
     }
+    private void deleteChildren(Folder parentFolder) {
+        if (parentFolder.getChildFolderIds() != null) {
+            for (String childFolderId : parentFolder.getChildFolderIds()) {
+                Folder childFolder = folderRepository.findById(childFolderId)
+                        .orElse(null);
+                if (childFolder != null) {
+                    deleteChildren(childFolder);  // Recursive call
+                    folderRepository.delete(childFolder);
+                }
+            }
+        }
+
+        // Delete associated files
+        if (parentFolder.getChildFileIds() != null) {
+            fileRepository.deleteAllById(parentFolder.getChildFileIds());
+        }
+    }
+
 }

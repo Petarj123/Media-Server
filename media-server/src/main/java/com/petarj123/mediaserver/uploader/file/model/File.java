@@ -30,11 +30,11 @@ public class File {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         File file = (File) o;
-        return Objects.equals(fileName, file.fileName);
+        return Objects.equals(fileName, file.fileName) && Objects.equals(filePath, file.filePath);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(fileName);
+        return Objects.hash(fileName, filePath);
     }
 }

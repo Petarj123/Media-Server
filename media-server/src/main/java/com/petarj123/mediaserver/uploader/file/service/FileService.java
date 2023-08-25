@@ -11,11 +11,10 @@ import com.petarj123.mediaserver.uploader.file.repository.FileRepository;
 import com.petarj123.mediaserver.uploader.folder.model.Folder;
 import com.petarj123.mediaserver.uploader.folder.repository.FolderRepository;
 import com.petarj123.mediaserver.uploader.interfaces.FileServiceImpl;
-import com.petarj123.mediaserver.uploader.service.ClamAVService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ws.schild.jave.EncoderException;
@@ -38,18 +37,13 @@ public class FileService implements FileServiceImpl {
     private final FileSystemService fileSystemService;
     private final FolderRepository folderRepository;
     @Override
+    @CacheEvict(value = {"mainFolder", "folder"}, allEntries = true)
     public ScanResult saveFile(MultipartFile multipartFile, String folderId) throws FileException, InvalidFileExtensionException, IOException {
         // 1. Check if the file is empty
         fileSystemService.checkFileIsEmpty(multipartFile);
 
         // 2. Sanitize the file's name
         SanitizedFile sanitizedFileName = fileSanitizer.sanitizeFileName(Objects.requireNonNull(multipartFile.getOriginalFilename()));
-
-        // 2.1 Check if a file with the same name already exists in the database
-        long count = fileRepository.countByFileName(sanitizedFileName.name);
-        if (count > 0) {
-            throw new FileException("File with the same name already exists.");
-        }
 
         // 3. Prepare a temporary path
         Path tempTargetPath = fileSystemService.prepareTemporaryPath(sanitizedFileName);
@@ -67,6 +61,13 @@ public class FileService implements FileServiceImpl {
             // 7. Prepare the final storage path using folder's name
             Path finalTargetPath = fileSystemService.prepareFinalPath(sanitizedFileName, folder.getPath());
 
+            // 7.1 Check if a file with the same name and path already exists in the database
+            long count = fileRepository.countByFileNameAndFilePath(sanitizedFileName.name, finalTargetPath.toString());
+            if (count > 0) {
+                Files.deleteIfExists(tempTargetPath);
+                throw new FileException("File with the same name already exists.");
+            }
+
             // 8. Extract metadata
             Map<String, Object> metadata = fileSystemService.extractFileMetadata(tempTargetPath, sanitizedFileName.fileType);
 
@@ -83,14 +84,16 @@ public class FileService implements FileServiceImpl {
             // If the file is infected
             Files.deleteIfExists(tempTargetPath);
             throw new RuntimeException("The uploaded file is infected!", e);
-        } finally {
+        }
+        finally {
             Files.deleteIfExists(tempTargetPath);
         }
     }
 
     @Override
+    @CacheEvict(value = {"mainFolder", "folder"}, allEntries = true)
     public boolean deleteFile(String filename, String folderId) throws FileException, FolderException {
-        File fileToDelete = fileRepository.findByFileName(filename)
+        File fileToDelete = fileRepository.findByFileNameAndFolderId(filename, folderId)
                 .orElseThrow(() -> new FileException("File " + filename + " not found in the database."));
 
         // Physically delete the file from the file system
@@ -111,13 +114,13 @@ public class FileService implements FileServiceImpl {
             folderRepository.save(parentFolder);
         }
 
-        // Remove the file's reference from the database
         fileRepository.delete(fileToDelete);
 
-        return true; // Return true to indicate successful deletion
+        return true;
     }
     // TODO Test
     @Override
+    @CacheEvict(value = {"mainFolder", "folder"}, allEntries = true)
     public void moveFiles(List<String> files, String currentFolderId, String newFolderId) throws FileException {
         // Find source and target folders
         Folder sourceFolder = folderRepository.findById(currentFolderId)
@@ -142,7 +145,7 @@ public class FileService implements FileServiceImpl {
             try {
                 Files.move(storedFileLocation, targetPath);
                 storedFile.setFilePath(targetPath.toString());
-                storedFile.setFolderId(newFolderId); // Set the new folderId
+                storedFile.setFolderId(newFolderId);
                 fileRepository.save(storedFile);
 
                 // Update childFileIds for source and target folders
