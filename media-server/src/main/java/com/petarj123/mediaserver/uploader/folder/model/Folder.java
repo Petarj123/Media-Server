@@ -25,4 +25,5 @@ public class Folder {
     private FileType fileType;
     private Date createdAt;
     private Date modifiedAt;
+    private boolean isMainFolder;
 }

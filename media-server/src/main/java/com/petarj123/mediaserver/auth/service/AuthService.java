@@ -18,7 +18,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -108,6 +107,7 @@ public class AuthService {
                         .createdAt(new Date())
                         .modifiedAt(new Date())
                         .fileType(FileType.FOLDER)
+                        .isMainFolder(true)
                         .build();
             } else {
                 throw new FolderException("Folder " + name + " already exists.");
