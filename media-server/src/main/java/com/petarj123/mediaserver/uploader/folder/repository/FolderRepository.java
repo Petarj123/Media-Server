@@ -2,7 +2,6 @@ package com.petarj123.mediaserver.uploader.folder.repository;
 
 import com.petarj123.mediaserver.uploader.folder.model.Folder;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,4 +16,5 @@ public interface FolderRepository extends MongoRepository<Folder, String> {
     Optional<Folder> findByPath(String userFolderPath);
 
     List<Folder> findAllByIdIn(List<String> childFolderIds);
+
 }
