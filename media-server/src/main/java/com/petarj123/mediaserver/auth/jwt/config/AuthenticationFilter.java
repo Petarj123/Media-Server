@@ -45,8 +45,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             } catch (UsernameNotFoundException e) {
-                // TODO Depending on your requirements, consider logging this or even changing the response status.
-                System.out.println("User not found: " + e.getMessage()); // Replace with proper logging.
+                // TODO Replace with proper logging.
+                System.out.println("User not found: " + e.getMessage());
             }
         }
 
