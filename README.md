@@ -4,10 +4,6 @@ Welcome to the Home Media Server project. A self-hosted media management platfor
 
 # Features
 
-Java Spring Boot: A robust backend framework ensuring scalability and reliability.
-
-MongoDB Integration: Efficient data storage and retrieval with MongoDB.
-
 File and Folder Management: Users can upload, move, and delete media files and organize them into folders.
 
 File Scanning with ClamAV: Automatically scan files for vulnerabilities upon upload using ClamAV.
