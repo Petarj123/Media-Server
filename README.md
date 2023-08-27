@@ -27,7 +27,7 @@ Welcome to the Home Media Server project. A self-hosted media management platfor
 
 **ClamAVCommands (CLI):** Enables configurations related to ClamAV settings and their schedules.
 
-**DatabaseCommands (CLI):* Connect to your MongoDB database and trigger backup functionalities.
+**DatabaseCommands (CLI):** Connect to your MongoDB database and trigger backup functionalities.
 
 **FileUploaderCommands (CLI):** Modify the server address and port designated for file uploads.
 
